@@ -1,7 +1,9 @@
 # Intent Based Bot
 
-Conversational engine for ChatBot fully based on intents using deep learning models and external NLP APIs. Supports primary and secondary modes of Facebook Handover Protocol
-Some Jupyter Notebooks are provided for testing the application.
+Conversational engine for ChatBot fully based on intents using deep learning models and external NLP APIs. Supports primary and secondary modes of Facebook Handover Protocol.  
+Some Jupyter Notebooks are provided for testing the application.  
+You must provide a `config.py` file with your keys and configuration in `intentbasedbot` package and a model trained on `instance/model`
+You could download one trained on [SNIPS Dataset](https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines) [here](https://s3-us-west-2.amazonaws.com/intent-based-bot/models/model.zip) in english and spanish.
 
 ## Screenshots
 ![Intent Detection](doc/img/intent-detection.jpg)
@@ -54,5 +56,3 @@ export FLASK_APP=intentbasedbot && export FLASK_DEBUG=true
 # And run
 flask run --host=0.0.0.0
 ```
-
-Model trained with the Dataset of SNIPS and translated to Spanish. A  config.py  file must be provided with your keys and a model trained in instance folder
