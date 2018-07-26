@@ -8,7 +8,7 @@ Some Jupyter Notebooks are provided for testing the application.
 ![Handover Protocol](doc/img/handover-protocol.jpg)
 
 ## Libraries used
-'flask', 'requests', 'ansicolors', 'rfc3339', 'pymessenger', 'pandas','numpy', 'keras', 'scikit-learn', 'tensorflow'
+`flask`, `requests`, `ansicolors`, `rfc3339`, `pymessenger`, `pandas`,`numpy`, `keras`, `scikit-learn`, `tensorflow`
 
 
 ## Deploy with Docker
