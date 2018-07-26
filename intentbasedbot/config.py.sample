@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+import os
+
+############################################## Graph API Call ##############################################
+GRAPH_URL = os.environ.get('GRAPH_URL') if os.environ.get('GRAPH_URL') else 'https://graph.facebook.com/me/'
+MESSAGES_URI = os.environ.get('MESSAGES_URI') if os.environ.get('MESSAGES_URI') else 'messages'
+PASS_THREAD_CONTROL_URI = os.environ.get('PASS_THREAD_CONTROL_URI') if os.environ.get('PASS_THREAD_CONTROL_URI') else 'pass_thread_control'
+TAKE_THREAD_CONTROL_URI = os.environ.get('TAKE_THREAD_CONTROL_URI') if os.environ.get('TAKE_THREAD_CONTROL_URI') else 'take_thread_control'
+
+###################################### Tokens ######################################
+FACEBOOK_VERIFY_TOKEN = os.environ.get('FACEBOOK_VERIFY_TOKEN') if os.environ.get('FACEBOOK_VERIFY_TOKEN') else 'YOUR_TOKEN'
+FACEBOOK_ACCESS_TOKEN = os.environ.get('FACEBOOK_ACCESS_TOKEN') if os.environ.get('FACEBOOK_ACCESS_TOKEN') else 'YOUR_TOKEN'
+GRAPH_PARAMS = {'access_token': FACEBOOK_ACCESS_TOKEN}
+
+WIT_URL =  os.environ.get('WIT_URL') if os.environ.get('WIT_URL') else 'https://api.wit.ai/'
+WIT_ENTITIES_URI = os.environ.get('WIT_ENTITIES_URI') if os.environ.get('WIT_ENTITIES_URI') else 'entities'
+WIT_SAMPLES_URI = os.environ.get('WIT_SAMPLES_URI') if os.environ.get('WIT_SAMPLES_URI') else 'samples'
+WIT_MESSAGE_URI = os.environ.get('WIT_MESSAGE_URI') if os.environ.get('WIT_MESSAGE_URI') else 'message'
+WIT_ACCESS_TOKEN = os.environ.get('WIT_ACCESS_TOKEN') if os.environ.get('WIT_ACCESS_TOKEN') else 'YOUR_TOKEN'
+WIT_HEADERS = {"Authorization": f"Bearer {WIT_ACCESS_TOKEN}"}
+WIT_VERSION = '20180710'
+
+###################################### Facebook identities ######################################
+FANPAGE_ID = os.environ.get('FANPAGE_ID') if os.environ.get('FANPAGE_ID') else 'YOUR_ID'
+PRIMARY_APP_ID = os.environ.get('PRIMARY_APP_ID') if os.environ.get('PRIMARY_APP_ID') else 'YOUR_ID'
+SECONDARY_APP_ID = os.environ.get('SECONDARY_APP_ID') if os.environ.get('SECONDARY_APP_ID') else 'YOUR_ID'
+PAGE_INBOX_APP_ID = os.environ.get('PAGE_INBOX_APP_ID') if os.environ.get('PAGE_INBOX_APP_ID') else 'YOUR_ID'
+
+###################################### Config ######################################
+SEND_MESSAGE = os.environ.get('SEND_MESSAGE') if os.environ.get('SEND_MESSAGE') else False
+USE_WIT = False
+USE_MODEL = True
+
+###################################### Playground shortcuts ######################################
+SENDER_ID = os.environ.get('SENDER_ID') if os.environ.get('SENDER_ID') else 'YOUR_ID'
+
+interlocutors = {
+	FANPAGE_ID: 'bot',
+	SENDER_ID: 'person'
+}
+
+apps = {
+	PRIMARY_APP_ID: 'intentbasedbot',
+	SECONDARY_APP_ID: 'mememebot',
+	PAGE_INBOX_APP_ID: 'inbox'
+}
+
+

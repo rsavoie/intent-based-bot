@@ -1,0 +1,5 @@
+data/
+intentbasedbot.egg-info/
+.git/
+.ipynb_checkpoints/
+*.ipynb

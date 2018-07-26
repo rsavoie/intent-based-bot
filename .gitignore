@@ -1,0 +1,11 @@
+data/
+embeddings/
+dist/
+.ipynb_checkpoints/
+*.egg-info/
+__pycache__/
+env/
+.idea/
+*.zip
+config.py
+instance/
