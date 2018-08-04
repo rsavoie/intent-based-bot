@@ -3,6 +3,7 @@
 from intentbasedbot import app
 from intentbasedbot import facebook as fb
 from intentbasedbot import intents
+from intentbasedbot.config import *
 
 # System
 import time
@@ -24,7 +25,7 @@ def hello():
 	return jsonify(message="Hello I'm a Facebook Bot!")
 
 
-@app.route("/webhook", methods=['GET'])
+@app.route(WEBHOOK_URI, methods=['GET'])
 def verify_webhook():
 	"""
 		Before allowing people to message your bot, Facebook has implemented a verify token that confirms all requests
@@ -38,7 +39,7 @@ def verify_webhook():
 	return fb.verify_token(mode, token, challenge)
 
 
-@app.route("/webhook", methods=['POST'])
+@app.route(WEBHOOK_URI, methods=['POST'])
 def receive_message():
 	""" We will receive messages that Facebook sends our bot at this endpoint """
 
@@ -47,7 +48,6 @@ def receive_message():
 
 	# TODO For debugging purposes
 	# app.logger.info(f'Payload received in webhook {payload}')
-	app.logger.info(app.instance_path)
 
 	# Checking page subscription from Fanpage
 	if not payload.get('object') and payload.get('object') != 'page':

@@ -43,7 +43,7 @@ def verify_token(mode, token, challenge):
 
 def decode_messaging(messaging, channel='messaging'):
 	# TODO For debugging purposes
-	# app.logger.info(messaging)
+	app.logger.info(messaging)
 	""" Decodes the message and handles according to type """
 	sender = messaging['sender']['id']
 	recipient = messaging['recipient']['id']
@@ -52,16 +52,19 @@ def decode_messaging(messaging, channel='messaging'):
 	# TODO Beautify this
 	# app.logger.info(f'{date} Text message from {interlocutors[sender]} to {interlocutors[recipient]} "{text}"')
 
-	responses = ['']
-
 	if messaging.get('pass_thread_control'):
-		app.logger.info("I'm the bot and I'm receiving the Message Thread")
-		responses.append(handle_pass_thread_control(sender, messaging.get('pass_thread_control')))
+		handle_pass_thread_control(sender, messaging.get('pass_thread_control'))
+	elif messaging.get('take_thread_control'):
+		handle_take_thread_control(sender, messaging.get('take_thread_control'))
 	elif messaging['message'].get('quick_reply'):
-		responses.append(handle_quick_reply(sender, messaging['message']['quick_reply']))
+		# Can I respond?
+		if channel == 'messaging':
+			handle_quick_reply(sender, messaging['message']['quick_reply'])
+		else:
+			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}' with quick reply")
 	# TODO An attachment usually comes wih text too
 	elif messaging['message'].get('attachments'):
-		responses.append(handle_attachments(sender, messaging['message'].get('attachments')))
+		handle_attachments(sender, messaging['message'].get('attachments'))
 	elif messaging['message'].get('text'):
 		# responses.append(handle_text(sender, text))
 		# Can I respond?
@@ -69,16 +72,21 @@ def decode_messaging(messaging, channel='messaging'):
 			# text = 'Welcome! The bot is currently in control. \n\n Tap "Pass to Inbox" to pass control to the Page Inbox.'
 			# title = 'Pass to Inbox'
 
-			# text = "Soy el bot respondiendo"
-			# title = 'Persona'
-			# payload = 'pass_to_inbox'
+			# Send one quick reply to enable the user talks with person
+			text = f'Soy el bot {apps[I_AM]}'
+			if I_AM == PRIMARY_APP_ID:
+				payload = ['pass_to_inbox', 'pass_to_secondary']
+			elif I_AM == SECONDARY_APP_ID:
+				payload = ['pass_to_inbox', 'pass_to_primary']
+			else:
+				app.logger.info("I'm the operator")
+				payload = ['pass_to_primary', 'pass_to_secondary']
 
-			# send_quick_reply(sender, text, title, payload)
-			# Consuming our model
-			intent = intents.get_intent(messaging['message'].get('text'))
-			responses.append("Soy el bot respondiendo\n" + intent)
+			send_quick_reply(sender, text, payload)
+			# Consuming our model for detect intent
+			# intent = intents.get_intent(messaging['message'].get('text'))
 		else:
-			app.logger.info(f"I'm the bot listening all this conversation in channel {channel}")
+			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}'")
 	else:
 		app.logger.info(f"Unknow message type")
 
@@ -92,9 +100,9 @@ def decode_messaging(messaging, channel='messaging'):
 	# 	responses.append('\nNo encontre entidades')
 
 	# One point of response
-	response_text = ' '.join(filter(None, responses))
-	text_response(sender, response_text)
-	return response_text
+	# response_text = ' '.join(filter(None, responses))
+	# text_response(sender, response_text)
+	# return response_text
 
 
 def handle_text(sender, text):
@@ -125,7 +133,7 @@ def handle_attachments(sender, attachments):
 	bot.send_generic_message(sender, elements)
 
 def handle_quick_reply(sender, quick_reply):
-	# Primary receiver
+	# Primary passing the conversation to inbox
 	if quick_reply.get('payload') and quick_reply.get('payload') == 'pass_to_inbox':
 		# Quick reply to pass to Page inbox was clicked
 		page_inbox_app_id = '263902037430900'
@@ -135,32 +143,65 @@ def handle_quick_reply(sender, quick_reply):
 		title = 'Bot'
 		payload = 'take_from_inbox'
 
-		send_quick_reply(sender, text, title, payload)
+		send_quick_reply(sender, text, [payload])
 		pass_thread_control(sender, page_inbox_app_id)
 
-	# Secondary receiver
+	# Primary take the conversation from the inbox
 	if quick_reply.get('payload') and quick_reply.get('payload') == 'take_from_inbox':
 		# Quick reply to take from Page inbox was clicked
 		# text = 'The Primary Receiver is taking control back. \n\n Tap "Pass to Inbox" to pass thread control to the Page Inbox.'
 		# title = 'Pass to Inbox'
-		text = 'El bot vuelve a tomar el control'
-		title = 'Operador'
+		text = f'Pasaste a hablar con {apps[I_AM]}'
 		payload = 'pass_to_inbox'
 
-		send_quick_reply(sender, text, title, payload)
+		send_quick_reply(sender, text, [payload])
+		take_thread_control(sender)
+
+	# Primary giving control to secondary
+	if quick_reply.get('payload') and quick_reply.get('payload') == 'pass_to_secondary':
+		text = f'Pasaste a hablar con {apps[SECONDARY_APP_ID]}'
+
+		payload = 'pass_to_primary'
+
+		send_quick_reply(sender, text, [payload])
+		pass_thread_control(sender, SECONDARY_APP_ID)
+
+	# Primary taking control again
+	if quick_reply.get('payload') and quick_reply.get('payload') == 'pass_to_primary':
+		text = f'Pasaste a hablar con {apps[I_AM]}'
+		payload = 'pass_to_inbox'
+
+		send_quick_reply(sender, text, [payload])
 		take_thread_control(sender)
 
 def handle_pass_thread_control(sender, pass_thread_control):
 	# thread control was passed back to bot manually in Page inbox
-	# For give the option of return
-	# Ya lo pasa o es solo una sugerencia?
-	# text = 'You passed control back to the Primary Receiver by marking "Done" in the Page Inbox. \n\n Tap "Pass to Inbox" to pass control to the Page Inbox.'
-	# title = 'Pass to Inbox'
-	text = 'El operador lo marco como listo. Volves a hablar con el bot'
-	title = 'Operador'
-	payload = 'pass_to_inbox'
+	new_owner_app_id = str(pass_thread_control['new_owner_app_id'])
+	metadata = pass_thread_control['metadata']
+	app.logger.info(f'Conversation is now handled by "{apps[new_owner_app_id]}" with metadata "{metadata}"')
 
-	send_quick_reply(sender, text, title, payload)
+	text = f'La conversacion cambio de dueño. Pasaste a hablar con {apps[SECONDARY_APP_ID]}'
+	# For give the option of return to person
+	payload = ['pass_to_inbox']
+	if I_AM == PRIMARY_APP_ID:
+		payload.append('pass_to_secondary')
+	elif I_AM == SECONDARY_APP_ID:
+		payload.append('pass_to_primary')
+
+	send_quick_reply(sender, text, payload)
+
+def handle_get_thread_owner(sender):
+	params = {
+		'access_token': {FACEBOOK_ACCESS_TOKEN},
+		'recipient' : sender
+	}
+	res = req.get(f'{GRAPH_URL}{GET_THREAD_OWNER_URI}', params=params)
+	return res['data'][0]['thread_owner']['app_id']
+
+def handle_take_thread_control(sender, take_thread_control):
+	previous_owner_app_id = str(take_thread_control['previous_owner_app_id'])
+	metadata = take_thread_control['metadata']
+	app.logger.info(f'Im delivering this conversation "{apps[previous_owner_app_id]}" with metadata "{metadata}"')
 
 def handle_post_back(sender, post_back):
 	# messaging.get('postback'):
@@ -176,36 +217,48 @@ def get_response_message(text):
 
 
 def text_response(recipient, response):
-	date = utils.get_iso_date
 	""" uses PyMessenger to send response to user if enabled. Anyway logs in the stdout """
-	app.logger.info(f'{date} Sending response from bot to {interlocutors[recipient]} "{response}"')
+	app.logger.info(f'Sending response from bot to {interlocutors[recipient]} "{response}"')
 
 	if SEND_MESSAGE:
 		bot.send_text_message(recipient, response)
 
 ####################################### Graph API Call #######################################
-def send_quick_reply(recipient, text, title, postback_payload):
+def send_quick_reply(recipient, text, postback_payload):
 	# Simple text message template
+	quick_replies = []
+	for element in postback_payload:
+		quick_replies.append({
+			'content_type': 'text',
+			'title': parse_quick_replies(element),
+			'payload': element
+		})
+
 	payload = {
 		'recipient': {'id': recipient},
 		'message': {
 			'text': text,
-			'quick_replies': [{
-				'content_type': 'text',
-				'title': title,
-				'payload': postback_payload
-			}]
+			'quick_replies': quick_replies
 		}
 	}
 
-	date = utils.get_iso_date
-	app.logger.info(f'{date} Sending Quick Reply from bot to {interlocutors[recipient]} "{postback_payload}"')
+	app.logger.info(f'Sending Quick Reply from "bot" to "{interlocutors[recipient]}" "{quick_replies}"')
 
 	if SEND_MESSAGE:
 		req.post(f'{GRAPH_URL}{MESSAGES_URI}', params=GRAPH_PARAMS, json=payload)
 
+def parse_quick_replies(postback_payload):
+	reply_lookup = {
+		'pass_to_inbox':'Pasar a Operador',
+		'pass_to_primary':'Pasar a Primario',
+		'pass_to_secondary':'Pasar a Secundario',
+		'take_from_inbox': 'Tomar del Operador',
+		'take_from_secondary': 'Tomar del Secundario'
+	}
+	return reply_lookup[postback_payload]
+
 def pass_thread_control(user_id, target_app_id):
-	app.logger.info(f'Passing thread control to {apps[target_app_id]}')
+	app.logger.info(f'Passing thread control to "{apps[target_app_id]}"')
 	payload = {
 		'recipient': { 'id': user_id },
 		 'target_app_id': target_app_id
