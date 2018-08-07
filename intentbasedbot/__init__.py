@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from flask import Flask
 import os
+import warnings
 
 app = Flask(__name__)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import intentbasedbot.controllers
 

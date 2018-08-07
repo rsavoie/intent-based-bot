@@ -4,31 +4,27 @@ from intentbasedbot import app
 from intentbasedbot.config import *
 from intentbasedbot import model
 
-# SciPy
-import numpy as np
-
 # Web
 import requests as req
 
-def get_intent(text) -> str:
-	""" Consume external APIs and our model """
-	response = ''
+""" Wraps the connection with NLPs APIs and models """
+
+def get_intent(text) -> dict:
+	""" Consume external APIs or/and our model and returns the best intent prediction  """
 	intents = []
 
 	if USE_WIT:
+		# intent_entity = intent.get('_entity') # Another interesting field in WIT
 		intents += consume_wit(text)
 
 	if USE_MODEL:
 		intents.append(consume_model(text))
 
-	for intent in intents:
-		intent_detected = intent['intent']
-		intent_confidence = round(intent['confidence'] * 100, 2)
-		# intent_entity = intent.get('_entity') # Another interesting field in WIT
-		app.logger.info(f'Intent detected {intent_detected} {intent_confidence}')
-		response += f'Me estas preguntando sobre "{intent_detected}" {intent_confidence}%'
+	# TODO Taking only the first intent by now
+	intent = intents[0]
+	app.logger.info(f"Intent detected {intent['intent']} {intent['confidence']}")
 
-	return response
+	return intent
 
 def consume_wit(text) -> list:
 	app.logger.info(f'Consuming wit with {text}')
@@ -41,9 +37,4 @@ def consume_wit(text) -> list:
 def consume_model(text) -> dict:
 	app.logger.info(f'Consuming model with {text}')
 
-	# TODO Call with one by now
-	intents_result = model.predict(text, company_name='origenes')
-
-	# Check max confidence class
-	best_class = np.argmax([intent['confidence'] for intent in intents_result])
-	return intents_result[best_class]
+	return model.predict(text, company_name='origenes')

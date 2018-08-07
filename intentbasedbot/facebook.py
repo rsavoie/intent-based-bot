@@ -6,6 +6,7 @@ from intentbasedbot.config import *
 # System
 import random
 import requests as req
+from time import sleep
 
 # Facebook Messenger
 from pymessenger.bot import Bot
@@ -58,10 +59,9 @@ def decode_messaging(messaging, channel='messaging'):
 		handle_take_thread_control(sender, messaging.get('take_thread_control'))
 	elif messaging['message'].get('quick_reply'):
 		# Can I respond?
-		if channel == 'messaging':
-			handle_quick_reply(sender, messaging['message']['quick_reply'])
-		else:
-			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}' with quick reply")
+		# if channel == 'messaging':
+		app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}' with quick reply")
+		handle_quick_reply(sender, messaging['message']['quick_reply'])
 	# TODO An attachment usually comes wih text too
 	elif messaging['message'].get('attachments'):
 		handle_attachments(sender, messaging['message'].get('attachments'))
@@ -73,19 +73,30 @@ def decode_messaging(messaging, channel='messaging'):
 			# title = 'Pass to Inbox'
 
 			# Send one quick reply to enable the user talks with person
-			text = f'Soy el bot {apps[I_AM]}'
+			text = f'Soy {apps[I_AM]}'
 			if I_AM == PRIMARY_APP_ID:
-				payload = ['pass_to_inbox', 'pass_to_secondary']
+				payload = ['pass_to_inbox']
 			elif I_AM == SECONDARY_APP_ID:
 				payload = ['pass_to_inbox', 'pass_to_primary']
 			else:
 				app.logger.info("I'm the operator")
 				payload = ['pass_to_primary', 'pass_to_secondary']
 
-			# send_quick_reply(sender, text, payload)
+			sleep(2)
+			send_mark_seen(sender)
+			sleep(3)
+			send_typing_event(sender)
+			sleep(3)
 			# Consuming our model for detect intent
 			intent = intents.get_intent(messaging['message'].get('text'))
-			text_response(sender, text + '\n' + intent)
+
+			if intent['confidence'] > 70:
+				response = f"Me estas preguntando sobre {intent['intent']} {intent['confidence']}%"
+				text_response(sender, response)
+			else:
+				response = f"No estoy tan segurx.\nMe estas preguntando sobre {intent['intent']} {intent['confidence']}%\nSi queres podes hablar con un operador"
+				send_quick_reply(sender, response, payload)
+				# text_response(sender, response)
 		else:
 			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}'")
 	else:
@@ -140,7 +151,7 @@ def handle_quick_reply(sender, quick_reply):
 		page_inbox_app_id = '263902037430900'
 		# text = 'The Primary Receiver is passing control to the Page Inbox. \n\n Tap "Take From Inbox" to have the Primary Receiver take control back.'
 		# title = 'Take From Inbox'
-		text = 'Pasaste a hablar con un operador'
+		text = 'Pasaste a hablar con un Operador'
 		title = 'Bot'
 		payload = 'take_from_inbox'
 
@@ -181,13 +192,13 @@ def handle_pass_thread_control(sender, pass_thread_control):
 	metadata = pass_thread_control['metadata']
 	app.logger.info(f'Conversation is now handled by "{apps[new_owner_app_id]}" with metadata "{metadata}"')
 
-	text = f'La conversacion cambio de dueño. Pasaste a hablar con {apps[SECONDARY_APP_ID]}'
+	text = f'El Operador lo marco como listo. Volves a hablar con {apps[new_owner_app_id]}'
 	# For give the option of return to person
 	payload = ['pass_to_inbox']
-	if I_AM == PRIMARY_APP_ID:
-		payload.append('pass_to_secondary')
-	elif I_AM == SECONDARY_APP_ID:
-		payload.append('pass_to_primary')
+	# if I_AM == PRIMARY_APP_ID:
+	# 	payload.append('pass_to_secondary')
+	# elif I_AM == SECONDARY_APP_ID:
+	# 	payload.append('pass_to_primary')
 
 	send_quick_reply(sender, text, payload)
 
@@ -250,7 +261,7 @@ def send_quick_reply(recipient, text, postback_payload):
 
 def parse_quick_replies(postback_payload):
 	reply_lookup = {
-		'pass_to_inbox':'Pasar a Operador',
+		'pass_to_inbox':'Hablar con Operador',
 		'pass_to_primary':'Pasar a Primario',
 		'pass_to_secondary':'Pasar a Secundario',
 		'take_from_inbox': 'Tomar del Operador',
@@ -275,3 +286,21 @@ def take_thread_control(user_id):
 	}
 
 	req.post(f'{GRAPH_URL}{TAKE_THREAD_CONTROL_URI}', params=GRAPH_PARAMS, json=payload)
+
+def send_typing_event(user_id):
+	app.logger.info(f'Sending typing event')
+	payload = {
+		'recipient': { 'id': user_id },
+		'sender_action': 'typing_on'
+	}
+
+	req.post(f'{GRAPH_URL}{MESSAGES_URI}', params=GRAPH_PARAMS, json=payload)
+
+def send_mark_seen(user_id):
+	app.logger.info(f'Sending typing event')
+	payload = {
+		'recipient': { 'id': user_id },
+		'sender_action': 'mark_seen'
+	}
+
+	req.post(f'{GRAPH_URL}{MESSAGES_URI}', params=GRAPH_PARAMS, json=payload)
