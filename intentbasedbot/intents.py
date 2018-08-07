@@ -22,11 +22,11 @@ def get_intent(text) -> str:
 		intents.append(consume_model(text))
 
 	for intent in intents:
-		intent_detected = intent['value']
+		intent_detected = intent['intent']
 		intent_confidence = round(intent['confidence'] * 100, 2)
-		# intent_entity = intent.get('_entity') # Another interesting field
-		app.logger.info(f'Intent detected {intent_detected}')
-		response += f'Encontre esta intencion {intent_detected}'
+		# intent_entity = intent.get('_entity') # Another interesting field in WIT
+		app.logger.info(f'Intent detected {intent_detected} {intent_confidence}')
+		response += f'Me estas preguntando sobre "{intent_detected}" {intent_confidence}%'
 
 	return response
 

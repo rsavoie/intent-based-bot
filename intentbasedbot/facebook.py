@@ -43,7 +43,7 @@ def verify_token(mode, token, challenge):
 
 def decode_messaging(messaging, channel='messaging'):
 	# TODO For debugging purposes
-	app.logger.info(messaging)
+	# app.logger.info(messaging)
 	""" Decodes the message and handles according to type """
 	sender = messaging['sender']['id']
 	recipient = messaging['recipient']['id']
@@ -82,9 +82,10 @@ def decode_messaging(messaging, channel='messaging'):
 				app.logger.info("I'm the operator")
 				payload = ['pass_to_primary', 'pass_to_secondary']
 
-			send_quick_reply(sender, text, payload)
+			# send_quick_reply(sender, text, payload)
 			# Consuming our model for detect intent
-			# intent = intents.get_intent(messaging['message'].get('text'))
+			intent = intents.get_intent(messaging['message'].get('text'))
+			text_response(sender, text + '\n' + intent)
 		else:
 			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}'")
 	else:
