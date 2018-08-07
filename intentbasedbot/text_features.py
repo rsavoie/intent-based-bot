@@ -9,7 +9,7 @@ import unidecode # pip
 from nltk.corpus import stopwords
 from stop_words import get_stop_words
 
-# 06/08 August from TF IDF analysis
+# Top words from TF IDF analysis
 common_words = ['muchas', 'gracias', 'quiero', 'saber', 'queria', 'quisiera', 'ok', 'buen', 'dia', 'dias', 'hola', 'puede', 'ser', 'buenas', 'buenos', 'tardes', 'q', 'x', 'cualquier']
 
 # Replace accents, remove trailing spaces and lowercase

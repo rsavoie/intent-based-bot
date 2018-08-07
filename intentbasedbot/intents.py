@@ -42,7 +42,7 @@ def consume_model(text) -> dict:
 	app.logger.info(f'Consuming model with {text}')
 
 	# TODO Call with one by now
-	intents_result = model.predict([text], 'es')
+	intents_result = model.predict(text, company_name='origenes')
 
 	# Check max confidence class
 	best_class = np.argmax([intent['confidence'] for intent in intents_result])
