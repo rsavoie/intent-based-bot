@@ -126,11 +126,21 @@ def typing(sender):
 
 
 def handle_control(text):
+
 	""" For opening, closing and switch between models """
 	if 'hola' in tf.filter_tokenize(text):
 		return 'Hola muy buenos dias! En que te puedo ayudar?'
 	elif 'chau' in tf.filter_tokenize(text):
 		return 'Hasta luego, espero haber podido ayudar'
+	elif text == 'seguros':
+		intents.change_model('origenes')
+		return f'Atendiendo consultas de {text}'
+	elif text == 'educacion':
+		intents.change_model('utelesup')
+		return f'Atendiendo consultas de {text}'
+	elif text == 'motos':
+		intents.change_model('cycles_motos')
+		return f'Atendiendo consultas de {text}'
 	else:
 		return False
 

@@ -15,6 +15,7 @@ from keras.models import model_from_json
 
 def get_model_and_encoder(company_name):
 	base_path = app.instance_path
+	app.logger.info(f'Loading models of "{company_name}"')
 
 	# Model definition
 	model_path = os.path.join(base_path, 'models', f'model_{company_name}.json')

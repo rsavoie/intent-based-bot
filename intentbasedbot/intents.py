@@ -9,6 +9,8 @@ import requests as req
 
 """ Wraps the connection with NLPs APIs and models """
 
+company_name = COMPANY_NAME
+
 def get_intent(text) -> dict:
 	""" Consume external APIs or/and our model and returns the best intent prediction  """
 	intents = []
@@ -37,4 +39,10 @@ def consume_wit(text) -> list:
 def consume_model(text) -> dict:
 	app.logger.info(f'Consuming model with {text}')
 
-	return model.predict(text, company_name='origenes')
+	global company_name
+	return model.predict(text, company_name=company_name)
+
+def change_model(new_company_name):
+	global company_name
+	app.logger.info(f'Changing model from {company_name} to {new_company_name}')
+	company_name = new_company_name
