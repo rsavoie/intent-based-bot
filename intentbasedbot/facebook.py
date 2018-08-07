@@ -2,6 +2,7 @@
 # Main packages of the application
 from intentbasedbot import app, utils, intents
 from intentbasedbot.config import *
+from intentbasedbot import text_features as tf
 
 # System
 import random
@@ -66,37 +67,35 @@ def decode_messaging(messaging, channel='messaging'):
 	elif messaging['message'].get('attachments'):
 		handle_attachments(sender, messaging['message'].get('attachments'))
 	elif messaging['message'].get('text'):
-		# responses.append(handle_text(sender, text))
 		# Can I respond?
 		if channel == 'messaging':
-			# text = 'Welcome! The bot is currently in control. \n\n Tap "Pass to Inbox" to pass control to the Page Inbox.'
-			# title = 'Pass to Inbox'
-
-			# Send one quick reply to enable the user talks with person
-			text = f'Soy {apps[I_AM]}'
-			if I_AM == PRIMARY_APP_ID:
-				payload = ['pass_to_inbox']
-			elif I_AM == SECONDARY_APP_ID:
-				payload = ['pass_to_inbox', 'pass_to_primary']
+			# TODO Uncomment for Demo
+			# typing(sender)
+			# Smalltalk and control messages
+			control_message = handle_control(messaging['message'].get('text'))
+			if control_message:
+				text_response(sender, control_message)
+				app.logger.info(f'Control message called "{control_message}"')
 			else:
-				app.logger.info("I'm the operator")
-				payload = ['pass_to_primary', 'pass_to_secondary']
+				# Send one quick reply to enable the user talks with person
+				text = f'Soy {apps[I_AM]}'
+				if I_AM == PRIMARY_APP_ID:
+					payload = ['pass_to_inbox']
+				elif I_AM == SECONDARY_APP_ID:
+					payload = ['pass_to_inbox', 'pass_to_primary']
+				else:
+					app.logger.info("I'm the operator")
+					payload = ['pass_to_primary', 'pass_to_secondary']
 
-			sleep(2)
-			send_mark_seen(sender)
-			sleep(3)
-			send_typing_event(sender)
-			sleep(3)
-			# Consuming our model for detect intent
-			intent = intents.get_intent(messaging['message'].get('text'))
-
-			if intent['confidence'] > 70:
-				response = f"Me estas preguntando sobre {intent['intent']} {intent['confidence']}%"
-				text_response(sender, response)
-			else:
-				response = f"No estoy tan segurx.\nMe estas preguntando sobre {intent['intent']} {intent['confidence']}%\nSi queres podes hablar con un operador"
-				send_quick_reply(sender, response, payload)
-				# text_response(sender, response)
+				# Consuming our model for detect intent
+				intent = intents.get_intent(messaging['message'].get('text'))
+				if intent['confidence'] > 70:
+					response = f"Me estas preguntando sobre {intent['intent']} {intent['confidence']}%"
+					text_response(sender, response)
+				else:
+					response = f"No estoy tan segurx.\nMe estas preguntando sobre {intent['intent']} {intent['confidence']}%\nSi queres podes hablar con un operador"
+					send_quick_reply(sender, response, payload)
+					# text_response(sender, response)
 		else:
 			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}'")
 	else:
@@ -117,10 +116,23 @@ def decode_messaging(messaging, channel='messaging'):
 	# return response_text
 
 
-def handle_text(sender, text):
-	# TODO Random fancy responses by now
-	# return get_response_message(text)
-	return ''
+def typing(sender):
+	""" Simulates a person typing """
+	sleep(2)
+	send_mark_seen(sender)
+	sleep(3)
+	send_typing_event(sender)
+	sleep(3)
+
+
+def handle_control(text):
+	""" For opening, closing and switch between models """
+	if 'hola' in tf.filter_tokenize(text):
+		return 'Hola muy buenos dias! En que te puedo ayudar?'
+	elif 'chau' in tf.filter_tokenize(text):
+		return 'Hasta luego, espero haber podido ayudar'
+	else:
+		return False
 
 
 def handle_entities(sender, entities) -> str:
@@ -138,11 +150,16 @@ def handle_entities(sender, entities) -> str:
 
 def handle_attachments(sender, attachments):
 	""" if user sends us a GIF, photo, video or any other non-text item """
-	elements = []
-	element = Element(title="Este es el adjunto que me mandaste", image_url=attachments[0]['payload']['url'], subtitle="", item_url="https://www.cliengo.com/")
-	elements.append(element)
+	# Handle Like Sticker
+	if attachments[0]['payload'].get('sticker_id') == 369239263222822:
+		emoji = u'\U0001F60D'
+		text_response(sender, emoji)
+	else:
+		elements = []
+		element = Element(title="Este es el adjunto que me mandaste", image_url=attachments[0]['payload']['url'], subtitle="", item_url="https://www.cliengo.com/")
+		elements.append(element)
 
-	bot.send_generic_message(sender, elements)
+		bot.send_generic_message(sender, elements)
 
 def handle_quick_reply(sender, quick_reply):
 	# Primary passing the conversation to inbox
