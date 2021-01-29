@@ -98,6 +98,7 @@ def decode_messaging(messaging, channel='messaging'):
 					# text_response(sender, response)
 		else:
 			app.logger.info(f"I'm the bot listening all this conversation in channel '{channel}'")
+			intents.get_intent(messaging['message'].get('text'))
 	else:
 		app.logger.info(f"Unknow message type")
 
@@ -132,15 +133,15 @@ def handle_control(text):
 		return 'Hola muy buenos dias! En que te puedo ayudar?'
 	elif 'chau' in tf.filter_tokenize(text):
 		return 'Hasta luego, espero haber podido ayudar'
-	elif text == 'seguros':
-		intents.change_model('origenes')
-		return f'Atendiendo consultas de {text}'
-	elif text == 'educacion':
-		intents.change_model('utelesup')
-		return f'Atendiendo consultas de {text}'
 	elif text == 'motos':
 		intents.change_model('cycles_motos')
-		return f'Atendiendo consultas de {text}'
+		return f'Estoy respondiendo consultas sobre {text}'
+	elif text == 'seguros':
+		intents.change_model('origenes')
+		return f'Estoy respondiendo consultas sobre {text}'
+	elif text == 'celulares':
+		intents.change_model('smartfix')
+		return f'Estoy respondiendo consultas sobre {text}'
 	else:
 		return False
 

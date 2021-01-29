@@ -37,7 +37,7 @@ def consume_wit(text) -> list:
 	return response.json()['entities'].get('intent')
 
 def consume_model(text) -> dict:
-	app.logger.info(f'Consuming model with {text}')
+	app.logger.info(f'Consuming model with "{text}"')
 
 	global company_name
 	return model.predict(text, company_name=company_name)

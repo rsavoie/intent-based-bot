@@ -44,7 +44,7 @@ def get_model_and_encoder(company_name):
 
 	return model, encoder, tokenizer
 
-def preprocessing(sentences, tokenizer, max_len = 300):
+def preprocessing(sentences, tokenizer, max_len = 200):
 	"""
 		:sentences: List of strings
 		:returns: (1,max_len) numpy array
