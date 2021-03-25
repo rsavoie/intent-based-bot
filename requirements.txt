@@ -22,7 +22,7 @@ protobuf==3.6.0
 pymessenger==0.0.7.0
 python-dateutil==2.7.3
 pytz==2018.5
-PyYAML==3.13
+PyYAML==5.4
 requests==2.19.1
 requests-toolbelt==0.8.0
 rfc3339==6.0
